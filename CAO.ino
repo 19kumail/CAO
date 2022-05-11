@@ -13,6 +13,7 @@ void connWiFi() { //Function for connection to Wifi
       delay(1000);
     }
   Serial.println(WiFi.localIP());
+  Serial.println("You are now Online.");
 }
 void setup()
 {
@@ -28,6 +29,12 @@ void setup()
 }
 void loop()
 {
+  if (WiFi.status()!= WL_CONNECTED){
+    Serial.println("You are now Offline.");
+    WiFi.disconnect();
+    connWiFi();
+  }
+  delay(1000);
     /*Serial.println("scan start");
 
     // WiFi.scanNetworks will return the number of networks found
