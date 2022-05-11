@@ -1,5 +1,19 @@
+//Including Wifi Library
 #include "WiFi.h"
-//Testing first commit
+//Initializing credentials for Wifi Network
+const char* ssid = "Kumail";
+const char* password = "lmaoscenes";
+
+void connWiFi() { //Function for connection to Wifi
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password); //Passing Credentials
+  Serial.print("Connecting to WiFi ..");
+    while (WiFi.status() != WL_CONNECTED) {
+      Serial.print('.');
+      delay(1000);
+    }
+  Serial.println(WiFi.localIP());
+}
 void setup()
 {
     Serial.begin(115200);
@@ -8,10 +22,13 @@ void setup()
     WiFi.disconnect();
     delay(100);
     Serial.println("Setup done");
+    connWiFi(); //Call Function
+    Serial.print("RRSI: ");
+    Serial.println(WiFi.RSSI());
 }
 void loop()
 {
-    Serial.println("scan start");
+    /*Serial.println("scan start");
 
     // WiFi.scanNetworks will return the number of networks found
     int n = WiFi.scanNetworks();
@@ -32,9 +49,10 @@ void loop()
             Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
             delay(10);
         }
+     
     }
-    Serial.println("");
 
+    Serial.println("");
     // Wait a bit before scanning again
-    delay(1000);
+    delay(1000);*/  
 }
