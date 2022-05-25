@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Home Automation</title>
+    <title>ESP Datalogging Firebase App</title>
 
     <!-- include Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-app.js"></script>
 
-    <!-- include only the Firebase features required -->
+    <!-- include only the Firebase features as you need -->
     <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-database.js"></script>
 
@@ -30,6 +30,7 @@
       // Make auth and database references
       const auth = firebase.auth();
       const db = firebase.database();
+
     </script>
 
     <!-- include highchartsjs to build the charts-->
@@ -46,15 +47,17 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 
   </head>
+
   <body>
+
     <!--TOP BAR-->
     <div class="topnav">
-      <h1>Home Automation Data Collection <i class="fas fa-clipboard-list"></i></h1>
+      <h1>Sensor Readings App <i class="fas fa-clipboard-list"></i></h1>
     </div>
 
     <!--AUTHENTICATION BAR (USER DETAILS/LOGOUT BUTTON)-->
     <div id="authentication-bar" style="display: none;">
-      <p><span id="authentication-status">LOGGED IN</span>
+      <p><span id="authentication-status">User logged in</span>
         <span id="user-details">USEREMAIL</span>
         <a href="/" id="logout-link">(logout)</a>
       </p>
@@ -96,11 +99,11 @@
             <p><i class="fas fa-tint" style="color:#00add6;"></i> HUMIDITY</p>
             <p><span class="reading"><span id="hum"></span> &percnt;</span></p>
           </div>
-          <!--PRESSURE
+          <!--PRESSURE-->
           <div class="card">
             <p><i class="fas fa-angle-double-down" style="color:#e1e437;"></i> PRESSURE</p>
             <p><span class="reading"><span id="pres"></span> hPa</span></p>
-          </div> -->
+          </div>
         </div>
       </div>
       <!--GAUGES-->
@@ -137,13 +140,13 @@
             <div id="chart-humidity" class="chart-container"></div>
           </div>
         </div>
-        <!--PRESSURE-CHART
+        <!--PRESSURE-CHART-->
         <div class="cards">
           <div class="card">
             <p><i class="fas fa-angle-double-down" style="color:#e1e437;"></i> PRESSURE CHART</p>
             <div id="chart-pressure" class="chart-container"></div>
           </div>
-        </div>  -->
+        </div>
       </div>
 
     <!--BUTTONS TO HANDLE DATA-->
@@ -161,7 +164,7 @@
       <form id= "delete-data-form" class="modal-content" action="/">
         <div class="container">
           <h1>Delete Data</h1>
-          <p>Do you want to clear the database?</p>
+          <p>Are you sure you want to delete all data from database?</p>
           <div class="clearfix">
             <button type="button" onclick="document.getElementById('delete-modal').style.display='none'" class="cancelbtn">Cancel</button>
             <button type="submit" onclick="document.getElementById('delete-modal').style.display='none'" class="deletebtn">Delete</button>
@@ -178,7 +181,7 @@
               <th>Timestamp</th>
               <th>Temp (ºC)</th>
               <th>Hum (%)</th>
-              <!--<th>Pres (hPa)</th>-->
+              <th>Pres (hPa)</th>
             </tr>
             <tbody id="tbody">
             </tbody>
