@@ -1,4 +1,3 @@
-//Including all necessary Libraries
 #include <Arduino.h>  //Necessary when using platformio
 #include <WiFi.h> //Connect ESP32 to the internet
 #include <Firebase_ESP_Client.h>  //Interface the board with Firebase
@@ -12,8 +11,8 @@
 #include "addons/RTDBHelper.h"  // Provide the RTDB payload printing info and other helper functions.
 
 //Initializing credentials for Wifi Network
-const char* ssid = "Kumail";
-const char* password = "lmaoscenes";
+#define WIFI_SSID "Kumail"
+#define WIFI_PASSWORD "kumail123"
 
 //Firebase Project API key
 #define API "AIzaSyAmwgK1hdavhPPIhJxSjvEBIkYaa5g1gO8"
@@ -26,24 +25,23 @@ const char* password = "lmaoscenes";
 #define DB_URL "https://home-automation-f5bdf-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
 //Firebase objects
-FirebaseData fbd;
-FirebaseAuth fba;
-FirebaseConfig fbc;
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
 
 String uid; //Save UID of USER
 
-String dbpath;  //Database main path
+String databasePath;  //Database main path
 
 //Database children nodes
-String temp = "/Temperature";
-String hum = "/Humidity";
-String infra = "/Infrared";
-String gas = "/Gas";
-String Time = "/Time";
+String tempPath = "/temperature";
+String humPath = "/humidity";
+String infraPath = "/infrared";
+String gasPath = "/gas";
+String timePath = "/timestamp";
 
-String parent;  //Parent node updated in every loop
+String parentPath;  //Parent node updated in every loop
 int timestamp;
-
 FirebaseJson json;  //Variable of FirebaseJson
 const char* ntpserver = "pool.ntp.org";  //To request time from a cluster of time severs
 //DHT dht; //Sensor object created on ESP32 default I2C
@@ -54,26 +52,26 @@ float humidity;
 float infrared;
 float gastype;
 
-//Time variable (readings after every second)
+//Time variable (readings after every 10 seconds)
 unsigned long prevtime = 0;
-unsigned long delaytime = 1000;
+unsigned long delaytime = 10000;
 
 void connWiFi() { //Function for connection to Wifi
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password); //Passing Credentials
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to WiFi ..");
-    while (WiFi.status() != WL_CONNECTED) {
-      Serial.print('.');
-      delay(1000);
-    }
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print('.');
+    delay(1000);
+  }
   Serial.println(WiFi.localIP());
   Serial.println("You are now Online.");
 }
 
-unsigned long getTime(){
+unsigned long getTime() { // Function that gets current epoch time
   time_t now;
   struct tm timeinfo;
-  if (!getLocalTime(&timeinfo)){
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("Failed to obtain time");
     return(0);
   }
   time(&now);
@@ -94,41 +92,41 @@ void setup(){
     Serial.println(F("DHTxx test!"));
     dht.begin();
     configTime(0,0,ntpserver);
+     // Assign the api key (required)
+  config.api_key = API;
 
-    fbc.api_key = API;   // Assign the api key (required)
+  // Assign the user sign in credentials
+  auth.user.email = FB_EMAIL;
+  auth.user.password = FB_PASS;
 
-    // Assign the user sign in credentials
-    fba.user.email = FB_EMAIL;
-    fba.user.password = FB_PASS;
+  // Assign the RTDB URL (required)
+  config.database_url = DB_URL;
 
-    // Assign the RTDB URL (required)
-    fbc.database_url = DB_URL;
+  Firebase.reconnectWiFi(true);
+  fbdo.setResponseSize(4096);
 
-    Firebase.reconnectWiFi(true);
-    fbd.setResponseSize(4096);
+  // Assign the callback function for the long running token generation task */
+  config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
 
-    // Assign the callback function for the long running token generation task */
-    fbc.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
+  // Assign the maximum retry of token generation
+  config.max_token_generation_retry = 5;
 
-    // Assign the maximum retry of token generation
-    fbc.max_token_generation_retry = 5;
-
-    // Initialize the library with the Firebase authen and config
-    Firebase.begin(&fbc, &fba);
+  // Initialize the library with the Firebase authen and config
+  Firebase.begin(&config, &auth);
 
     // Getting the user UID might take a few seconds
-    Serial.println("Getting User UID");
-    while ((fba.token.uid) == "") {
-      Serial.print('.');
-      delay(1000);
-    }
-    // Print user UID
-    uid = fba.token.uid.c_str();
-    Serial.print("User UID: ");
-    Serial.println(uid);
+  Serial.println("Getting User UID");
+  while ((auth.token.uid) == "") {
+    Serial.print('.');
+    delay(1000);
+  }
+  // Print user UID
+  uid = auth.token.uid.c_str();
+  Serial.print("User UID: ");
+  Serial.println(uid);
 
-    // Update database path
-    dbpath = "/UsersData/" + uid + "/readings";
+  // Update database path
+  databasePath = "/UsersData/" + uid + "/readings";
 }
 
 void loop(){
@@ -147,12 +145,11 @@ void loop(){
     Serial.print ("time: ");
     Serial.println (timestamp);
 
-    parent= dbpath + "/" + String(timestamp);
+    parentPath= databasePath + "/" + String(timestamp);
 
-    json.set(temp.c_str(), String(dht.readTemperature()));
-    json.set(hum.c_str(), String(dht.readHumidity()));
-    //json.set(presPath.c_str(), String(bme.readPressure()/100.0F));
-    json.set(Time, String(timestamp));
-    Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbd, parent.c_str(), &json) ? "ok" : fbd.errorReason().c_str());
-  }
+    json.set(tempPath.c_str(), String(dht.readTemperature()));
+    json.set(humPath.c_str(), String(dht.readHumidity()));
+    //json.set(infraPath.c_str(), String(dht.readInfra()));
+    json.set(timePath, String(timestamp));
+    Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, parentPath.c_str(), &json) ? "ok" : fbdo.errorReason().c_str());  }
 }
