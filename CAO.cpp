@@ -1,9 +1,11 @@
 #include <Arduino.h>  //Necessary when using platformio
 #include <WiFi.h> //Connect ESP32 to the internet
-#include <Firebase_ESP_Client.h>  //Interface the board with Firebase
 #include <Wire.h> //To interface with the DHT
+#include <Firebase_ESP_Client.h>  //Interface the board with Firebase
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
+#include <MQUnifiedsensor.h>
+#include <LiquidCrystal_I2C.h>
 #include "time.h" //To get time
 
 //To ensure proper working of Firebase library
@@ -50,11 +52,35 @@ const char* ntpserver = "pool.ntp.org";  //To request time from a cluster of tim
 float temperature;
 float humidity;
 float infrared;
-float gastype;
+float gas;
 
 //Time variable (readings after every 10 seconds)
 unsigned long prevtime = 0;
-unsigned long delaytime = 10000;
+unsigned long delaytime = 2000;
+// set the LCD number of columns and rows
+int lcdColumns = 16;
+int lcdRows = 2;
+
+DHT dht(23,DHT11);
+MQUnifiedsensor MQ4("Esp32 Dev Module", 3.3, 12, 34, "MQ-4");
+
+LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
+String Connect = "Connecting to WiFi ......" ;
+String Offline = "You are now Offline.";
+
+//DHT dht(2,DHT11);
+//MQUnifiedsensor MQ4("Esp32 Dev Module", 3.3, 10, A0, "MQ-4");
+void scrollText(int row, String message, int delayTime, int lcdColumns) {
+  for (int i=0; i < lcdColumns; i++) {
+    message = " " + message;  
+  } 
+  message = message + " "; 
+  for (int pos = 0; pos < message.length(); pos++) {
+    lcd.setCursor(0, row);
+    lcd.print(message.substring(pos, pos + lcdColumns));
+    delay(delayTime);
+  }
+}
 
 void connWiFi() { //Function for connection to Wifi
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -78,9 +104,9 @@ unsigned long getTime() { // Function that gets current epoch time
   return now;
 }
 
-DHT dht(23,DHT11);
 void setup(){
     Serial.begin(115200);
+    //Serial.begin(9600);
     // Set WiFi to station mode and disconnect from an AP if it was previously connected
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
@@ -90,7 +116,12 @@ void setup(){
     Serial.print("RRSI: ");
     Serial.println(WiFi.RSSI());
     Serial.println(F("DHTxx test!"));
+  
+    lcd.init();    // initialize LCD                   
+    lcd.backlight();  // turn on LCD backlight
     dht.begin();
+    MQ4.init();
+
     configTime(0,0,ntpserver);
      // Assign the api key (required)
   config.api_key = API;
@@ -129,13 +160,24 @@ void setup(){
   databasePath = "/UsersData/" + uid + "/readings";
 }
 
+String ALERT1 = "FIRE ALERT!!!";
+String ALERT2 = "TOO HOT!!!";
+String ALERT3 = "GAS LEAK!!!";
+String ALERT4 = "TOO HOT AND HUMID!!!";
+String SOL1 = "FIRE NEUTRALISED!!!";
+String SOL2 = "FAN TURNED ON!!!";
+String SOL3 = "EXHAUST TURNED ON!!!";
+String SOL4 = "COOLER TURNED ON!!!";
+String OK = "EVERYTHING OK!!!";
 void loop(){
+  lcd.setCursor(0, 0);
   if (WiFi.status()!= WL_CONNECTED){
     Serial.println("You are now Offline.");
+    scrollText(1,Offline,250,lcdColumns);
     WiFi.disconnect();
-    connWiFi();
   }
   delay(1000);
+  lcd.clear();
   // Send new readings to database
   if (Firebase.ready() && (millis() - prevtime > delaytime || prevtime == 0)){
     prevtime = millis();
@@ -149,7 +191,18 @@ void loop(){
 
     json.set(tempPath.c_str(), String(dht.readTemperature()));
     json.set(humPath.c_str(), String(dht.readHumidity()));
-    //json.set(infraPath.c_str(), String(dht.readInfra()));
+    json.set(gasPath.c_str(), String(analogRead(34)));
     json.set(timePath, String(timestamp));
     Serial.printf("Set json... %s\n", Firebase.RTDB.setJSON(&fbdo, parentPath.c_str(), &json) ? "ok" : fbdo.errorReason().c_str());  }
+
+  if(dht.readTemperature()>35 && analogRead(34)>750){
+    Serial.print("FIRE ALERT!!!");
+    scrollText(1,ALERT1,250,lcdColumns);
+    lcd.clear();
+  }
+  else if(dht.readTemperature()>35 && dht.readHumidity()>40){
+    Serial.print("HOT AND HUMID!!!");
+    scrollText(1,ALERT4,250,lcdColumns);
+    
+  }
 }
