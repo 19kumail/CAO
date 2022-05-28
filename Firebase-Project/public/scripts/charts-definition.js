@@ -4,7 +4,7 @@ window.addEventListener('load', onload);
 function onload(event){
   chartT = createTemperatureChart();
   chartH = createHumidityChart();
-  chartP = createPressureChart();
+  chartG = createGasChart();
 }
 
 // Create Temperature Chart
@@ -87,14 +87,14 @@ function createHumidityChart(){
 }
 
 // Create Pressure Chart
-function createPressureChart() {
+function createGasChart() {
   var chart = new Highcharts.Chart({
     chart:{ 
-      renderTo:'chart-pressure',
+      renderTo:'chart-gas',
       type: 'spline'  
     },
     series: [{
-      name: 'BME280'
+      name: 'MQ-4'
     }],
     title: { 
       text: undefined
@@ -116,7 +116,7 @@ function createPressureChart() {
     },
     yAxis: {
       title: { 
-        text: 'Pressure (hPa)' 
+        text: 'Gas' 
       }
     },
     credits: { 

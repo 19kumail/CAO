@@ -50,7 +50,7 @@ const gaugesReadingsElement = document.querySelector("#gauges-div");
 const chartsDivElement = document.querySelector('#charts-div');
 const tempElement = document.getElementById("temp");
 const humElement = document.getElementById("hum");
-const presElement = document.getElementById("pres");
+const gasElement = document.getElementById("gas");
 const updateElement = document.getElementById("lastUpdate")
 
 // MANAGE LOGIN/LOGOUT UI
@@ -85,11 +85,11 @@ const setupUI = (user) => {
       // Delete all data from charts to update with new values when a new range is selected
       chartT.destroy();
       chartH.destroy();
-      chartP.destroy();
+      chartG.destroy();
       // Render new charts to display new range of data
       chartT = createTemperatureChart();
       chartH = createHumidityChart();
-      chartP = createPressureChart();
+      chartG = createGasChart();
       // Update the charts with the new range
       // Get the latest readings and plot them on charts (the number of plotted readings corresponds to the chartRange value)
       dbRef.orderByKey().limitToLast(chartRange).on('child_added', snapshot =>{
@@ -97,12 +97,12 @@ const setupUI = (user) => {
         // Save values on variables
         var temperature = jsonData.temperature;
         var humidity = jsonData.humidity;
-        var pressure = jsonData.pressure;
+        var gas = jsonData.gas;
         var timestamp = jsonData.timestamp;
         // Plot the values on the charts
         plotValues(chartT, timestamp, temperature);
         plotValues(chartH, timestamp, humidity);
-        plotValues(chartP, timestamp, pressure);
+        plotValues(chartP, timestamp, gas);
       });
     });
 
@@ -146,12 +146,12 @@ const setupUI = (user) => {
       var jsonData = snapshot.toJSON(); // example: {temperature: 25.02, humidity: 50.20, pressure: 1008.48, timestamp:1641317355}
       var temperature = jsonData.temperature;
       var humidity = jsonData.humidity;
-      var pressure = jsonData.pressure;
+      var gas = jsonData.gas;
       var timestamp = jsonData.timestamp;
       // Update DOM elements
       tempElement.innerHTML = temperature;
       humElement.innerHTML = humidity;
-      presElement.innerHTML = pressure;
+      gasElement.innerHTML = gas;
       updateElement.innerHTML = epochToDateTime(timestamp);
     });
 
@@ -161,7 +161,7 @@ const setupUI = (user) => {
       var jsonData = snapshot.toJSON(); // example: {temperature: 25.02, humidity: 50.20, pressure: 1008.48, timestamp:1641317355}
       var temperature = jsonData.temperature;
       var humidity = jsonData.humidity;
-      var pressure = jsonData.pressure;
+      var gas = jsonData.gas;
       var timestamp = jsonData.timestamp;
       // Update DOM elements
       var gaugeT = createTemperatureGauge();
@@ -199,14 +199,14 @@ const setupUI = (user) => {
           console.log(jsonData);
           var temperature = jsonData.temperature;
           var humidity = jsonData.humidity;
-          var pressure = jsonData.pressure;
+          var gas = jsonData.gas;
           var timestamp = jsonData.timestamp;
           var content = '';
           content += '<tr>';
           content += '<td>' + epochToDateTime(timestamp) + '</td>';
           content += '<td>' + temperature + '</td>';
           content += '<td>' + humidity + '</td>';
-          content += '<td>' + pressure + '</td>';
+          content += '<td>' + gas + '</td>';
           content += '</tr>';
           $('#tbody').prepend(content);
           // Save lastReadingTimestamp --> corresponds to the first timestamp on the returned snapshot data
@@ -243,14 +243,14 @@ const setupUI = (user) => {
             else{
               var temperature = element.temperature;
               var humidity = element.humidity;
-              var pressure = element.pressure;
+              var gas = element.gas;
               var timestamp = element.timestamp;
               var content = '';
               content += '<tr>';
               content += '<td>' + epochToDateTime(timestamp) + '</td>';
               content += '<td>' + temperature + '</td>';
               content += '<td>' + humidity + '</td>';
-              content += '<td>' + pressure + '</td>';
+              content += '<td>' + gas + '</td>';
               content += '</tr>';
               $('#tbody').append(content);
             }

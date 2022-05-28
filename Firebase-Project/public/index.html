@@ -99,10 +99,10 @@
             <p><i class="fas fa-tint" style="color:#00add6;"></i> HUMIDITY</p>
             <p><span class="reading"><span id="hum"></span> &percnt;</span></p>
           </div>
-          <!--PRESSURE-->
+          <!--GAS-->
           <div class="card">
-            <p><i class="fas fa-angle-double-down" style="color:#e1e437;"></i> PRESSURE</p>
-            <p><span class="reading"><span id="pres"></span> hPa</span></p>
+            <p><i class="fas fa-angle-double-down" style="color:#e1e437;"></i> GAS</p>
+            <p><span class="reading"><span id="gas"></span> ppm</span></p>
           </div>
         </div>
       </div>
@@ -143,8 +143,8 @@
         <!--PRESSURE-CHART-->
         <div class="cards">
           <div class="card">
-            <p><i class="fas fa-angle-double-down" style="color:#e1e437;"></i> PRESSURE CHART</p>
-            <div id="chart-pressure" class="chart-container"></div>
+            <p><i class="fas fa-angle-smoke" style="color:#e1e437;"></i> GAS CHART</p>
+            <div id="chart-gas" class="chart-container"></div>
           </div>
         </div>
       </div>
@@ -181,7 +181,7 @@
               <th>Timestamp</th>
               <th>Temp (ºC)</th>
               <th>Hum (%)</th>
-              <th>Pres (hPa)</th>
+              <th>Gas (ppm)</th>
             </tr>
             <tbody id="tbody">
             </tbody>
