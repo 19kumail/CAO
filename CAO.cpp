@@ -56,7 +56,7 @@ float gas;
 
 //Time variable (readings after every 10 seconds)
 unsigned long prevtime = 0;
-unsigned long delaytime = 2000;
+unsigned long delaytime = 1000;
 // set the LCD number of columns and rows
 int lcdColumns = 16;
 int lcdRows = 2;
@@ -100,10 +100,15 @@ unsigned long getTime() { // Function that gets current epoch time
     Serial.println("Failed to obtain time");
     return(0);
   }
+  now = now++;
   time(&now);
   return now;
 }
-
+const int extinguish = 25;
+const int fan = 33;
+const int exhaust = 32;
+const int cooler = 26;
+const int buzz = 18;
 void setup(){
     Serial.begin(115200);
     //Serial.begin(9600);
@@ -121,6 +126,11 @@ void setup(){
     lcd.backlight();  // turn on LCD backlight
     dht.begin();
     MQ4.init();
+    pinMode (extinguish, OUTPUT);
+    pinMode (fan, OUTPUT);
+    pinMode (exhaust, OUTPUT);
+    pinMode (cooler, OUTPUT);
+    pinMode (buzz, OUTPUT);
 
     configTime(0,0,ntpserver);
      // Assign the api key (required)
@@ -161,14 +171,15 @@ void setup(){
 }
 
 String ALERT1 = "FIRE ALERT!!!";
-String ALERT2 = "TOO HOT!!!";
-String ALERT3 = "GAS LEAK!!!";
+String ALERT2 = "TOO HOT AND DRY!!!";
+String ALERT3 = "GAS LEAK!!!";   
 String ALERT4 = "TOO HOT AND HUMID!!!";
 String SOL1 = "FIRE NEUTRALISED!!!";
 String SOL2 = "FAN TURNED ON!!!";
 String SOL3 = "EXHAUST TURNED ON!!!";
 String SOL4 = "COOLER TURNED ON!!!";
-String OK = "EVERYTHING OK!!!";
+String FINE = "EVERYTHING OK!!!";
+
 void loop(){
   lcd.setCursor(0, 0);
   if (WiFi.status()!= WL_CONNECTED){
@@ -176,7 +187,6 @@ void loop(){
     scrollText(1,Offline,250,lcdColumns);
     WiFi.disconnect();
   }
-  delay(1000);
   lcd.clear();
   // Send new readings to database
   if (Firebase.ready() && (millis() - prevtime > delaytime || prevtime == 0)){
@@ -197,12 +207,52 @@ void loop(){
 
   if(dht.readTemperature()>35 && analogRead(34)>750){
     Serial.print("FIRE ALERT!!!");
+    digitalWrite(buzz,HIGH);
+    digitalWrite (extinguish, HIGH);	// turn on the LED
     scrollText(1,ALERT1,250,lcdColumns);
     lcd.clear();
+    delay(3000);
+    scrollText(1,SOL1,250,lcdColumns);
+    digitalWrite(buzz,LOW);
+    digitalWrite (extinguish, LOW);
   }
-  else if(dht.readTemperature()>35 && dht.readHumidity()>40){
+  else if(analogRead(34)>750){
+    Serial.print("GAS LEAK!!!");
+    digitalWrite(buzz,HIGH);
+    digitalWrite (exhaust, HIGH);
+    scrollText(1,ALERT3,250,lcdColumns);
+    lcd.clear();
+    delay(3000);
+    scrollText(1,SOL3,250,lcdColumns);
+    digitalWrite(buzz,LOW);
+    digitalWrite (exhaust, LOW);    
+  }
+  else if(dht.readTemperature()>33 && dht.readHumidity()>40){
     Serial.print("HOT AND HUMID!!!");
+    digitalWrite (fan, HIGH);
     scrollText(1,ALERT4,250,lcdColumns);
-    
+    lcd.clear();
+    delay(3000);
+    scrollText(1,SOL2,250,lcdColumns);
+    digitalWrite (fan, LOW);
   }
+  else if(dht.readTemperature()>33 && dht.readHumidity()<=40){
+    Serial.print("HOT AND DRY!!!");
+    digitalWrite (fan, HIGH);
+    digitalWrite (cooler, HIGH);
+    scrollText(1,ALERT2,250,lcdColumns);
+    lcd.clear();
+    delay(3000);
+    scrollText(1,SOL2,250,lcdColumns);
+    lcd.clear();
+    scrollText(1,SOL4,250,lcdColumns);
+    digitalWrite (fan, LOW);
+    digitalWrite (cooler, LOW);
+  }
+  else{
+    Serial.print("NORMAL!!!");
+    scrollText(1,FINE,250,lcdColumns);
+    lcd.clear();
+  }
+ 
 }
